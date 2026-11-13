@@ -8,7 +8,7 @@
     <testsuites>
         <testsuite name="Unit"><directory>../tests/Unit</directory></testsuite>
         <testsuite name="Feature"><directory>../tests/Feature</directory></testsuite>
-        <testsuite name="Viyo"><directory>../modules/Servers/Voyar/tests</directory><directory>../modules/Addons/ViyoCloud/tests</directory></testsuite>
+        <testsuite name="Viyo"><directory>../modules/Servers/Voyar/tests</directory><directory>../modules/Addons/ViyoCloud/tests</directory><directory>../modules/Gateways/PayTR/tests</directory></testsuite>
     </testsuites>
     <source><include><directory>../app</directory></include></source>
     <php>

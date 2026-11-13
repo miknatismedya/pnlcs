@@ -1,0 +1,10 @@
+{
+    "name": "paytr",
+    "type": "gateway",
+    "class": "Modules\\Gateways\\PayTR\\PayTRModule",
+    "provider": "Modules\\Gateways\\PayTR\\PayTRServiceProvider",
+    "version": "0.1.0",
+    "display_name": "PayTR",
+    "description": "PayTR iFrame API: kredi kartı, banka kartı, taksit (Türkiye)",
+    "author": { "name": "Viyo Cloud" }
+}
