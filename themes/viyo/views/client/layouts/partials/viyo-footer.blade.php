@@ -1,4 +1,4 @@
-{{-- The client area's footer, in place of the core one. --}}
+{{-- The client area's footer (used by client/layouts/app in this theme). --}}
 @php
     $t = fn (string $key, string $fallback) => \Illuminate\Support\Facades\Lang::has('viyocloud::site.'.$key) ? __('viyocloud::site.'.$key) : __($fallback);
 @endphp
@@ -12,4 +12,3 @@
         <a href="{{ url('/legal') }}">{{ $t('footer.legal', 'client.nav.contact') }}</a>
     </nav>
 </footer>
-<!--vx:end-->

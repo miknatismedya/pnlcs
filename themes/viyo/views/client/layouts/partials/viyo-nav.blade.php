@@ -1,5 +1,5 @@
 {{--
-    The client area's menu, in place of the core menu bar.
+    The client area's menu (used by client/layouts/app in this theme).
     Signed in: a sidebar and a top bar. Guest: the site's own header.
     Words come from the Viyo Cloud addon and fall back to the core's own,
     so the menu still reads right while the addon is off.
@@ -164,10 +164,3 @@
     </div>
 </header>
 @endif
-<script>
-// One open menu at a time; a click outside closes it.
-document.addEventListener('click', function (e) {
-    document.querySelectorAll('details.vx-menu[open]').forEach(function (d) { if (!d.contains(e.target)) d.removeAttribute('open'); });
-});
-</script>
-<!--vx:nav-->

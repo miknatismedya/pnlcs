@@ -9,8 +9,8 @@ use Modules\Addons\ViyoCloud\ViyoCloudServiceProvider;
 use Tests\TestCase;
 
 /*
- * The Viyo theme dresses the core client pages (themes/viyo/views/viyo/decorate)
- * instead of copying them: the core page must still be all there.
+ * The Viyo theme replaces core client views the pnlcs way (themes/viyo/views,
+ * see docs/developer/themes.md); the core parts of each page must still be there.
  */
 
 uses(TestCase::class, DatabaseTransactions::class);
@@ -54,6 +54,19 @@ test('a signed-in customer gets the sidebar, the balance and the page in one col
         ->toContain('vx-balance')
         ->toContain('<div class="vx-page">')
         ->toContain('class="pn-main"')
-        ->not->toContain('<!--vx:')
         ->and(substr_count($html, '<div class="vx-page">'))->toBe(1);
+});
+
+test('every view the theme replaces has a core original, so Setup → Updates can track it', function () {
+    $dir = base_path('themes/viyo/views');
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+
+    foreach ($files as $file) {
+        $relative = substr($file->getPathname(), strlen($dir) + 1);
+        // The theme's own partials are named viyo-*; everything else replaces a core view.
+        if (str_starts_with($file->getFilename(), 'viyo-')) {
+            continue;
+        }
+        expect(file_exists(resource_path('views/'.$relative)))->toBeTrue("no core view for {$relative}");
+    }
 });
