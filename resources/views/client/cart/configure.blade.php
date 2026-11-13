@@ -123,10 +123,10 @@
                                         {{-- Free: no price to read. The cycle is named only when
                                              the operator offers more than one. --}}
                                         <div class="cycle-price">{{ __('common.billing.free') }}</div>
-                                        @if(count($pricedCycles) > 1)<div class="cycle-label">{{ $cycle }}</div>@endif
+                                        @if(count($pricedCycles) > 1)<div class="cycle-label">{{ cycle_label($cycle) }}</div>@endif
                                     @else
                                         <div class="cycle-price">{{ display_money_fmt($cyclePrice) }}</div>
-                                        <div class="cycle-label">{{ $cycle }}</div>
+                                        <div class="cycle-label">{{ cycle_label($cycle) }}</div>
                                     @endif
                                 </label>
                             @endforeach
