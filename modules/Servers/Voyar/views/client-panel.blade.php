@@ -61,6 +61,9 @@
         @if($active)
         <div class="vy-actions">
             <a href="{{ route('voyar.client.console', $service) }}" target="_blank" rel="noopener" class="pn-btn pn-btn-sm pn-btn-primary"><i class="ri-terminal-box-line"></i> {{ __('voyar::voyar.panel.console') }}</a>
+            @if($billing === 'ondemand' && \Illuminate\Support\Facades\Route::has('viyocloud.hourly.usage'))
+            <a href="{{ route('viyocloud.hourly.usage', $service) }}" class="pn-btn pn-btn-sm"><i class="ri-timer-flash-line"></i> {{ __('viyocloud::site.hourly_order.usage_link') }}</a>
+            @endif
             <form method="POST" action="{{ route('voyar.client.password', $service) }}" onsubmit="return confirm(@js(__('voyar::voyar.panel.password_confirm')))">
                 @csrf
                 <button class="pn-btn pn-btn-sm"><i class="ri-key-2-line"></i> {{ __('voyar::voyar.panel.password') }}</button>

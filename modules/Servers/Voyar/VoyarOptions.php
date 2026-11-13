@@ -16,6 +16,7 @@ use App\Models\Service;
  * 2. The customer's configurable options, named "key|Title" with choices
  *    "value|Label" (the PNLCS convention the Proxmox module uses too):
  *    os, location, cpu, app, billing.
+ *    Or, for orders placed outside the cart, module_data.order_options.
  * 3. Product custom fields named "allowed_ips|...": the FTP IP allow-list.
  */
 final class VoyarOptions
@@ -52,9 +53,12 @@ final class VoyarOptions
             'billing' => (string) ($cfg['billing'] ?? 'prepaid'),
         ];
 
-        foreach (self::chosen($service) as $key => $value) {
-            if ($value !== '') {
-                $values[$key] = $value;
+        // Choices made on the order form win; an order made outside the cart
+        // (the hourly order page) keeps them in module_data.order_options.
+        $own = is_array($service->module_data['order_options'] ?? null) ? $service->module_data['order_options'] : [];
+        foreach (self::chosen($service) + $own as $key => $value) {
+            if (in_array($key, self::OPTION_KEYS, true) && (string) $value !== '') {
+                $values[$key] = (string) $value;
             }
         }
 

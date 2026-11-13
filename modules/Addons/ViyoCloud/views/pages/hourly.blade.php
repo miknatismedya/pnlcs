@@ -4,8 +4,7 @@
 @section('meta_description', __('viyocloud::site.hourly.lead'))
 
 @php
-    // Hourly ordering opens with the billing module; until then the buttons say so.
-    $hourlyOpen = false;
+    $hourlyOpen = \Modules\Addons\ViyoCloud\Support\HourlyBilling::settings()['enabled'];
     $calc = $plans->map(fn ($p) => ['name' => $p['name'], 'rate' => $p['hourly_raw']])->values();
     $currency = \App\Models\Currency::getDefault();
     [$dec, $thou] = \App\Models\Currency::FORMATS[(int) ($currency->format ?? 1)] ?? \App\Models\Currency::FORMATS[1];
@@ -34,7 +33,7 @@
                     <td>{{ $plan['hourly_month'] }}</td>
                     <td>
                         @if($hourlyOpen)
-                        <a href="{{ $plan['order_url'] }}" class="vc-btn vc-btn--primary vc-btn--sm">{{ __('viyocloud::site.hourly.start') }}</a>
+                        <a href="{{ route('viyocloud.hourly.create', ['plan' => $plan['slug']]) }}" class="vc-btn vc-btn--primary vc-btn--sm">{{ __('viyocloud::site.hourly.start') }}</a>
                         @else
                         <span class="vc-btn vc-btn--ghost vc-btn--sm is-disabled" aria-disabled="true">{{ __('viyocloud::site.common.coming_soon') }}</span>
                         @endif

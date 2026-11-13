@@ -32,7 +32,7 @@ class ViyoCloudModule implements AddonModuleInterface
 
     public function getVersion(): string
     {
-        return '0.1.0';
+        return '0.2.0';
     }
 
     public function getAuthor(): string
@@ -42,7 +42,15 @@ class ViyoCloudModule implements AddonModuleInterface
 
     public function activate(): array
     {
+        $this->migrate();
+
         return ['success' => true, 'message' => 'Viyo Cloud activated'];
+    }
+
+    /** The addon's own tables (migrations/); safe to run again. */
+    private function migrate(): void
+    {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--path' => 'modules/Addons/ViyoCloud/migrations', '--force' => true]);
     }
 
     public function deactivate(): array
@@ -56,6 +64,11 @@ class ViyoCloudModule implements AddonModuleInterface
             ['name' => 'phone', 'label' => 'Phone', 'type' => 'text', 'default' => ''],
             ['name' => 'whatsapp', 'label' => 'WhatsApp number (international, digits only)', 'type' => 'text', 'default' => ''],
             ['name' => 'email', 'label' => 'Sales e-mail', 'type' => 'text', 'default' => ''],
+            ['name' => 'hourly_enabled', 'label' => 'Hourly cloud ordering open', 'type' => 'checkbox', 'default' => '1'],
+            ['name' => 'hourly_stopped_percent', 'label' => 'Hourly: rate of a stopped server (% of the running rate)', 'type' => 'text', 'default' => '50'],
+            ['name' => 'hourly_min_start_hours', 'label' => 'Hourly: balance needed to start (hours)', 'type' => 'text', 'default' => '1'],
+            ['name' => 'hourly_low_balance_hours', 'label' => 'Hourly: warn when the balance covers fewer hours than', 'type' => 'text', 'default' => '24'],
+            ['name' => 'hourly_grace_days', 'label' => 'Hourly: delete a server this many days after the balance ran out', 'type' => 'text', 'default' => '3'],
         ];
     }
 
@@ -68,6 +81,8 @@ class ViyoCloudModule implements AddonModuleInterface
 
     public function upgrade(string $fromVersion): array
     {
+        $this->migrate();
+
         return ['success' => true, 'message' => 'Upgraded from '.e($fromVersion)];
     }
 
