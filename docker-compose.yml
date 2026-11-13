@@ -1,0 +1,39 @@
+# Yerel geliştirme ortamı:  docker compose up -d
+#   Panel:   http://localhost:8000   (kurulum: /install)
+#   E-posta: http://localhost:8025   (Mailpit - giden mailleri gösterir)
+services:
+  app:
+    build: { context: ., dockerfile: docker/Dockerfile.dev }
+    container_name: viyo-app
+    entrypoint: ["/var/www/pnlcs/docker/entrypoint.dev.sh"]
+    volumes:
+      - ./:/var/www/pnlcs
+    ports: ["8000:8000"]
+    depends_on: [db, mailpit]
+
+  scheduler:
+    build: { context: ., dockerfile: docker/Dockerfile.dev }
+    container_name: viyo-scheduler
+    command: sh -c "until [ -f vendor/autoload.php ]; do sleep 5; done; php artisan schedule:work"
+    volumes:
+      - ./:/var/www/pnlcs
+    depends_on: [app]
+
+  db:
+    image: mariadb:11
+    container_name: viyo-db
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: pnlcs
+      MARIADB_USER: pnlcs
+      MARIADB_PASSWORD: pnlcs
+    volumes: [viyo_db:/var/lib/mysql]
+    ports: ["3307:3306"]
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: viyo-mailpit
+    ports: ["8025:8025"]
+
+volumes:
+  viyo_db:

@@ -1,0 +1,14 @@
+/* ===== VIYO CLOUD — client area and store ===== */
+/* Colours come from theme.json; this only sets the typeface and a few shapes. */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+body, h1, h2, h3, h4, h5, .section-title {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #5b4cf0, #7a6cff) !important;
+    border-color: #5b4cf0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 8px 20px -10px rgba(91, 76, 240, .7) !important;
+}
+.card { border-radius: 16px !important; }

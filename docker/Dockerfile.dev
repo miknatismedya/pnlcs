@@ -1,0 +1,15 @@
+# Geliştirme imajı: PHP 8.4 + Composer + Node. Kod volume olarak bağlanır.
+FROM php:8.4-cli-bookworm
+
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions pdo_mysql mbstring xml curl zip gd bcmath intl opcache pcntl exif soap \
+ && apt-get update && apt-get install -y --no-install-recommends git unzip curl mariadb-client \
+ && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+ && apt-get install -y --no-install-recommends nodejs \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
+RUN printf "memory_limit=512M\nupload_max_filesize=64M\npost_max_size=64M\n" > /usr/local/etc/php/conf.d/99-dev.ini
+
+WORKDIR /var/www/pnlcs

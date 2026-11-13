@@ -1,0 +1,2 @@
+<svg class="vc-logo-mark" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="vcg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a6cff"/><stop offset="1" stop-color="#12c79a"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#vcg)"/><path d="M8.5 10.5 16 23l7.5-12.5" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+<span class="vc-logo-text">viyo<span>cloud</span></span>
