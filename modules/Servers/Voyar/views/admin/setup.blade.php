@@ -8,6 +8,11 @@
     $cfg = fn ($p) => is_array($p->config_options) ? $p->config_options : (json_decode((string) $p->config_options, true) ?: []);
     $groupId = optional(\App\Models\ConfigOptionGroup::where('name', \Modules\Servers\Voyar\VoyarSetup::GROUP_NAME)->first())->id;
     $linked = $groupId ? \App\Models\ConfigOptionLink::where('group_id', $groupId)->pluck('product_id')->all() : [];
+    $P = \Modules\Servers\Voyar\VoyarPricing::class;
+    $rate = $P::rate();
+    $money = fn (?float $v) => $v === null ? '—' : display_money_fmt($v);
+    $pct = fn (float $ours, ?float $cost) => $cost ? (($ours / $cost - 1) * 100) : null;
+    $vmProducts = $products->filter(fn ($p) => $p->server_type === 'voyar' && ($cfg($p)['voyar_kind'] ?? 'vm') === 'vm');
 @endphp
 <style>
     .vy-steps .card{margin-bottom:20px}.vy-steps .card-header{font-weight:700}
@@ -37,7 +42,12 @@
             <p>{{ __('voyar::voyar.setup.check_credentials') }}</p>
         @else
             <p class="vy-ok"><i class="fas fa-check-circle"></i> {{ __('voyar::voyar.setup.connected', ['email' => $server->username]) }}</p>
-            @if($credit !== null)<p>{{ __('voyar::voyar.setup.balance') }}: <b>{{ number_format((float) $credit, 2, ',', '.') }}₺</b></p>@endif
+            @if($credit !== null)<p>{{ __('voyar::voyar.setup.balance') }}: <b>{{ $P::usd((float) $credit, 2) }}</b> @if($rate)<span class="text-muted">(≈ {{ $money($P::toShop((float) $credit)) }})</span>@endif</p>@endif
+            @if($rate)
+                <p class="text-muted">{{ __('voyar::voyar.setup.rate_line', ['rate' => number_format($rate, 2, ',', '.')]) }} <a href="{{ url('/admin/config/currencies') }}">{{ __('voyar::voyar.setup.rate_link') }}</a></p>
+            @else
+                <p class="vy-bad">{{ __('voyar::voyar.setup.no_rate') }}</p>
+            @endif
             <form method="POST" action="{{ route('admin.voyar.setup.refresh') }}">@csrf<button class="btn btn-sm btn-default">{{ __('voyar::voyar.setup.refresh') }}</button></form>
         @endif
     </div>
@@ -78,12 +88,15 @@
                             <option value="ftp" @selected(($c['voyar_kind'] ?? '') === 'ftp' || $product->group?->slug === 'ftp-storage')>FTP</option>
                         </select>
                     </td>
-                    <td style="font-size:12px">
+                    <td style="font-size:12px;white-space:nowrap">
                         @if($current)
-                            Voyar: {{ $current['price']['ondemand'] ?? '—' }} /saat · prepaid {{ $current['price']['prepaid'] ?? '—' }}<br>
-                            @if($ours > 0 && $theirs > 0)
-                                {{ __('voyar::voyar.setup.margin') }}: <b class="{{ $ours > $theirs ? 'vy-ok' : 'vy-bad' }}">%{{ number_format(($ours / $theirs - 1) * 100, 1, ',', '.') }}</b>
-                            @endif
+                            @php
+                                $costM = $P::monthly((array) $current['price']); $costH = $P::hourly((array) $current['price']);
+                                $oursM = (float) ($product->priceFor('monthly') ?? 0); $mM = $pct($oursM, $costM); $mH = $ours > 0 ? $pct($ours, $costH) : null;
+                            @endphp
+                            {{ __('voyar::voyar.setup.cost') }}: {{ $P::usd((float) $current['price']['prepaid']) }}/{{ __('voyar::voyar.setup.day') }} → <b>{{ $money($costM) }}</b>/{{ __('voyar::voyar.setup.month') }} · {{ $money($costH) }}/{{ __('voyar::voyar.setup.hour') }}<br>
+                            @if($mM !== null && $oursM > 0){{ __('voyar::voyar.setup.margin_month') }}: <b class="{{ $mM > 0 ? 'vy-ok' : 'vy-bad' }}">%{{ number_format($mM, 0, ',', '.') }}</b> ({{ $money($oursM) }})@endif
+                            @if($mH !== null) · {{ __('voyar::voyar.setup.margin') }}: <b class="{{ $mH > 0 ? 'vy-ok' : 'vy-bad' }}">%{{ number_format($mH, 0, ',', '.') }}</b>@endif
                         @else — @endif
                     </td>
                 </tr>
@@ -136,11 +149,73 @@
 
         <h5>{{ __('voyar::voyar.setup.for_products') }}</h5>
         <div class="vy-checks">
-            @foreach($products->filter(fn ($p) => $p->server_type === 'voyar' && ($cfg($p)['voyar_kind'] ?? 'vm') === 'vm') as $p)
+            @foreach($vmProducts as $p)
             <label><input type="checkbox" name="products[]" value="{{ $p->id }}" @checked($linked === [] || in_array($p->id, $linked))> {{ $p->name }}</label>
             @endforeach
         </div>
         <button class="btn btn-primary">{{ __('voyar::voyar.setup.build_options') }}</button>
+    </form>
+</div>
+
+{{-- 4. Add-ons --}}
+<div class="card">
+    <div class="card-header"><span class="vy-num">4</span>{{ __('voyar::voyar.setup.step_addons') }}</div>
+    <form class="card-body" method="POST" action="{{ route('admin.voyar.setup.addons') }}">
+        @csrf
+        <p>{{ __('voyar::voyar.setup.addons_text') }}</p>
+        @if(($catalogue['addons'] ?? []) === [])
+            <p class="text-muted">{{ __('voyar::voyar.setup.no_addons') }}</p>
+        @else
+        <p><label>{{ __('voyar::voyar.setup.margin_input') }} <input type="number" name="margin" value="{{ old('margin', 30) }}" min="0" max="1000" step="1" class="form-control" style="width:110px;display:inline-block"> %</label></p>
+        <table class="table">
+            <thead><tr><th></th><th>{{ __('voyar::voyar.setup.addon') }}</th><th>{{ __('voyar::voyar.setup.max_qty') }}</th><th>{{ __('voyar::voyar.setup.cost') }}</th></tr></thead>
+            <tbody>
+            @foreach($catalogue['addons'] as $addon)
+                <tr>
+                    <td><input type="checkbox" name="addons[]" value="{{ $addon['id'] }}" checked></td>
+                    <td><b>{{ $addon['name'] }}</b><br><small class="text-muted">{{ $addon['description'] ?? '' }}</small></td>
+                    <td>{{ $addon['max_qty_effective'] ?? $addon['max_qty'] ?? 1 }}</td>
+                    <td style="white-space:nowrap">{{ $P::usd((float) ($addon['price']['prepaid'] ?? 0)) }}/{{ __('voyar::voyar.setup.day') }} → <b>{{ $money($P::monthly((array) ($addon['price'] ?? []))) }}</b>/{{ __('voyar::voyar.setup.month') }}</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+        <h5>{{ __('voyar::voyar.setup.for_products') }}</h5>
+        <div class="vy-checks">
+            @foreach($vmProducts as $p)
+            <label><input type="checkbox" name="products[]" value="{{ $p->id }}" checked> {{ $p->name }}</label>
+            @endforeach
+        </div>
+        <button class="btn btn-primary" @disabled(! $rate)>{{ __('voyar::voyar.setup.build_addons') }}</button>
+        @endif
+    </form>
+</div>
+
+{{-- 5. FTP products --}}
+@php
+    $ftpPlans = collect($voyarProducts)->where('kind', 'ftp')->values();
+    $taken = $products->map(fn ($p) => (string) ($cfg($p)['package_name'] ?? ''))->filter()->all();
+@endphp
+<div class="card">
+    <div class="card-header"><span class="vy-num">5</span>{{ __('voyar::voyar.setup.step_ftp') }}</div>
+    <form class="card-body" method="POST" action="{{ route('admin.voyar.setup.ftp') }}">
+        @csrf
+        <p>{{ __('voyar::voyar.setup.ftp_text') }}</p>
+        <table class="table">
+            <thead><tr><th>{{ __('voyar::voyar.setup.voyar_plan') }}</th><th>{{ __('voyar::voyar.setup.storage') }}</th><th>{{ __('voyar::voyar.setup.cost') }}</th><th></th></tr></thead>
+            <tbody>
+            @foreach($ftpPlans as $plan)
+                <tr>
+                    <td><b>{{ $plan['name'] }}</b></td>
+                    <td>{{ $plan['ftp_limits']['quota_gb'] ?? '—' }} GB</td>
+                    <td>{{ $P::usd((float) ($plan['price']['prepaid'] ?? 0)) }}/{{ __('voyar::voyar.setup.day') }} → <b>{{ $money($P::monthly((array) ($plan['price'] ?? []))) }}</b>/{{ __('voyar::voyar.setup.month') }}</td>
+                    <td>@if(in_array((string) $plan['id'], $taken, true))<span class="vy-ok">{{ __('voyar::voyar.setup.ftp_exists') }}</span>@endif</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+        <p><label>{{ __('voyar::voyar.setup.margin_input') }} <input type="number" name="margin" value="30" min="0" max="1000" step="1" class="form-control" style="width:110px;display:inline-block"> %</label></p>
+        <button class="btn btn-primary" @disabled(! $rate || $ftpPlans->isEmpty())>{{ __('voyar::voyar.setup.build_ftp') }}</button>
     </form>
 </div>
 @endif

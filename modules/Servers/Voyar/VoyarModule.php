@@ -125,6 +125,10 @@ class VoyarModule extends AbstractServerModule
             if ($opt->cpu !== '') {
                 $order['processor_family'] = $opt->cpu;
             }
+            // Add-ons chosen on the order form are ordered with the server.
+            foreach ($opt->addons as $addonId => $qty) {
+                $order['addons'][] = ['addonid' => $addonId, 'qty' => $qty];
+            }
 
             $created = $api->createServer($order);
             $remote = $created['service'] ?? [];

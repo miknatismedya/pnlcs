@@ -107,4 +107,43 @@ class SetupController extends Controller
 
         return back()->with('success', __('voyar::voyar.setup.options_built'));
     }
+
+    public function addons(Request $request, VoyarSetup $setup)
+    {
+        $data = $request->validate([
+            'addons' => ['required', 'array', 'min:1'], 'addons.*' => ['integer'],
+            'margin' => ['required', 'numeric', 'min:0', 'max:1000'],
+            'products' => ['required', 'array', 'min:1'], 'products.*' => ['integer'],
+        ]);
+        $chosen = collect($this->catalogue($setup)['addons'] ?? [])->whereIn('id', array_map('intval', $data['addons']))->values()->all();
+
+        try {
+            $n = $setup->addAddons($chosen, (float) $data['margin'], array_map('intval', $data['products']));
+        } catch (VoyarException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', __('voyar::voyar.setup.addons_built', ['n' => $n]));
+    }
+
+    public function ftp(Request $request, VoyarSetup $setup)
+    {
+        $data = $request->validate(['margin' => ['required', 'numeric', 'min:0', 'max:1000']]);
+
+        try {
+            $n = $setup->createFtpProducts($this->catalogue($setup)['products'] ?? [], (float) $data['margin']);
+        } catch (VoyarException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', __('voyar::voyar.setup.ftp_built', ['n' => $n]));
+    }
+
+    private function catalogue(VoyarSetup $setup): array
+    {
+        $server = VoyarSetup::server();
+        abort_unless($server, 404);
+
+        return Cache::get('voyar.setup.catalogue.'.$server->id) ?? $setup->catalogue($server);
+    }
 }

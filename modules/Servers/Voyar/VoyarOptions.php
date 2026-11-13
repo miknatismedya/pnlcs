@@ -17,6 +17,8 @@ use App\Models\Service;
  *    "value|Label" (the PNLCS convention the Proxmox module uses too):
  *    os, location, cpu, app, billing.
  *    Or, for orders placed outside the cart, module_data.order_options.
+ *    Voyar add-ons are options named "addon_{Voyar add-on id}|Title": a
+ *    quantity (how many) or a tick box (one).
  * 3. Product custom fields named "allowed_ips|...": the FTP IP allow-list.
  */
 final class VoyarOptions
@@ -65,6 +67,7 @@ final class VoyarOptions
         $values['billing'] = $values['billing'] === 'ondemand' ? 'ondemand' : 'prepaid';
         $values['cpu'] = in_array($values['cpu'], ['amd', 'intel'], true) ? $values['cpu'] : '';
         $values['allowed_ips'] = self::allowedIps($service);
+        $values['addons'] = self::addons($service);
 
         return new self($values);
     }
@@ -101,6 +104,32 @@ final class VoyarOptions
             $key = strtolower(trim(explode('|', (string) $row->option?->option_name, 2)[0]));
             if (in_array($key, self::OPTION_KEYS, true) && $row->sub) {
                 $out[$key] = trim(explode('|', (string) $row->sub->option_name, 2)[0]);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Voyar add-ons chosen on the order form: Voyar add-on id => quantity.
+     *
+     * @return array<int, int>
+     */
+    private static function addons(Service $service): array
+    {
+        if (! $service->exists) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($service->configOptions()->with('option')->get() as $row) {
+            $key = strtolower(trim(explode('|', (string) $row->option?->option_name, 2)[0]));
+            if (! preg_match('/^addon_(\d+)$/', $key, $m)) {
+                continue;
+            }
+            $qty = $row->option->option_type === 'quantity' ? (int) $row->qty : 1;
+            if ($qty > 0) {
+                $out[(int) $m[1]] = ($out[(int) $m[1]] ?? 0) + $qty;
             }
         }
 

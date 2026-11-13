@@ -114,11 +114,12 @@ class HourlyController extends Controller
             foreach ($group->options as $option) {
                 [$key, $title] = array_pad(explode('|', (string) $option->option_name, 2), 2, '');
                 $key = strtolower(trim($key));
-                if (! in_array($key, self::KEYS, true) || isset($out[$key])) {
+                if ($option->hidden || ! in_array($key, self::KEYS, true) || isset($out[$key])) {
                     continue;
                 }
                 $values = [];
-                foreach ($option->subs->sortBy('sort_order') as $sub) {
+                // A hidden choice stays on the orders that made it, but is not offered.
+                foreach ($option->subs->where('hidden', false)->sortBy('sort_order') as $sub) {
                     [$value, $label] = array_pad(explode('|', (string) $sub->option_name, 2), 2, '');
                     $values[trim($value)] = trim($label) !== '' ? trim($label) : trim($value);
                 }

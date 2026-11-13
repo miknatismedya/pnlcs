@@ -25,4 +25,6 @@ Route::middleware(['web', 'admin.auth', 'admin.2fa', 'admin.permission:manage_pr
         Route::post('setup/refresh', [SetupController::class, 'refresh'])->name('setup.refresh');
         Route::post('setup/mapping', [SetupController::class, 'mapping'])->name('setup.mapping');
         Route::post('setup/options', [SetupController::class, 'options'])->name('setup.options');
+        Route::post('setup/addons', [SetupController::class, 'addons'])->name('setup.addons');
+        Route::post('setup/ftp', [SetupController::class, 'ftp'])->name('setup.ftp');
     });

@@ -65,20 +65,84 @@ test('mapping ties products to the voyar module and its plan', function () {
         ->and($product->config_options['hourly_rate'])->toBe(0.255);
 });
 
-test('order options are built once, rebuilt in place and offered on the hourly order form', function () {
+test('running the options again only adds: ids, admin wording and old choices survive', function () {
     $product = setupProduct(2, 2, 40);
     $setup = new VoyarSetup;
 
     $setup->buildOptions(['location' => ['1' => 'Istanbul'], 'os' => ['13' => 'Ubuntu 24.04', '12' => 'Ubuntu 22.04'], 'cpu' => ['amd' => 'AMD EPYC']], [$product->id]);
+    $ubuntu = \App\Models\ConfigOptionSub::where('option_name', '13|Ubuntu 24.04')->firstOrFail();
+    $ubuntu->update(['option_name' => '13|Ubuntu 24.04 LTS']);   // the admin renames it
+
     $setup->buildOptions(['location' => ['1' => 'Istanbul'], 'os' => ['13' => 'Ubuntu 24.04'], 'cpu' => ['amd' => 'AMD EPYC', 'intel' => 'Intel Xeon']], [$product->id]);
 
     expect(ConfigOptionGroup::where('name', VoyarSetup::GROUP_NAME)->count())->toBe(1)
-        ->and(ConfigOptionLink::where('product_id', $product->id)->count())->toBe(1);
+        ->and(ConfigOptionLink::where('product_id', $product->id)->count())->toBe(1)
+        ->and($ubuntu->fresh()->option_name)->toBe('13|Ubuntu 24.04 LTS')
+        ->and(\App\Models\ConfigOptionSub::where('option_name', '12|Ubuntu 22.04')->value('hidden'))->toBeTrue();
 
     $choices = HourlyController::choices($product->fresh());
     expect(array_keys($choices))->toBe(['location', 'os', 'cpu'])
-        ->and($choices['os']['values'])->toBe(['13' => 'Ubuntu 24.04'])
+        ->and($choices['os']['values'])->toBe(['13' => 'Ubuntu 24.04 LTS'])
         ->and($choices['cpu']['values'])->toBe(['amd' => 'AMD EPYC', 'intel' => 'Intel Xeon']);
+});
+
+function setupDollar(float $tlPerDollar): void
+{
+    \App\Models\Currency::query()->update(['is_default' => false]);
+    \App\Models\Currency::updateOrCreate(['code' => 'TRY'], ['prefix' => '', 'suffix' => '₺', 'format' => 2, 'rate' => 1, 'is_default' => true]);
+    \App\Models\Currency::updateOrCreate(['code' => 'USD'], ['prefix' => '$', 'suffix' => '', 'format' => 1, 'rate' => 1 / $tlPerDollar, 'is_default' => false]);
+    app()->forgetInstance('pnlcs.currency');
+    Cache::flush();
+}
+
+test('Voyar dollars per day become a monthly price in lira at the shop rate', function () {
+    setupDollar(50);
+
+    // $0.083 a day is $2.49 a month, 124.50 at 50 a dollar.
+    expect(round(\Modules\Servers\Voyar\VoyarPricing::monthly(['prepaid' => 0.083]), 2))->toBe(124.5)
+        ->and(round(\Modules\Servers\Voyar\VoyarPricing::hourly(['ondemand' => 0.0039]), 3))->toBe(0.195);
+});
+
+test('add-ons become quantity options priced at cost plus margin, and a once-only one a tick box', function () {
+    setupDollar(50);
+    $product = setupProduct(2, 2, 40);
+    $addons = [
+        ['id' => 6, 'name' => 'Ek CPU', 'max_qty_effective' => 16, 'price' => ['prepaid' => 0.0672]],
+        ['id' => 7, 'name' => 'Yedekli Network', 'max_qty_effective' => 1, 'price' => ['prepaid' => 0.0672]],
+    ];
+
+    expect((new VoyarSetup)->addAddons($addons, 30, [$product->id]))->toBe(2);
+
+    $cpu = \App\Models\ConfigOption::where('option_name', 'like', 'addon_6|%')->firstOrFail();
+    $net = \App\Models\ConfigOption::where('option_name', 'like', 'addon_7|%')->firstOrFail();
+    // $0.0672 x 30 = $2.016 = 100.80 a month; +30% = 131.04.
+    expect($cpu->option_type)->toBe('quantity')->and((int) $cpu->qty_maximum)->toBe(16)
+        ->and($net->option_type)->toBe('checkbox')
+        ->and($cpu->subs->first()->priceFor('monthly'))->toBe(131.04)
+        ->and($cpu->subs->first()->priceFor('annually'))->toBe(1572.48);
+
+    // Again with another margin: prices change, no duplicates.
+    (new VoyarSetup)->addAddons($addons, 50, [$product->id]);
+    expect(\App\Models\ConfigOption::where('option_name', 'like', 'addon_6|%')->count())->toBe(1)
+        ->and($cpu->fresh()->subs->first()->priceFor('monthly'))->toBe(151.2);
+});
+
+test('missing FTP products are created once, with prices and the allowed IPs field', function () {
+    setupDollar(50);
+    $plans = [['id' => 44, 'name' => 'FTP Starter', 'kind' => 'ftp', 'description' => '100 GB', 'price' => ['prepaid' => 0.044], 'ftp_limits' => ['quota_gb' => 100]],
+        ['id' => 3, 'name' => 'CV-10', 'kind' => 'vm', 'price' => ['prepaid' => 0.083]]];
+
+    expect((new VoyarSetup)->createFtpProducts($plans, 20))->toBe(1)
+        ->and((new VoyarSetup)->createFtpProducts($plans, 20))->toBe(0);
+
+    $product = Product::where('name', 'FTP Starter')->firstOrFail();
+    // $0.044 x 30 = $1.32 = 66.00; +20% = 79.20.
+    expect($product->group->slug)->toBe('ftp-storage')
+        ->and($product->server_type)->toBe('voyar')
+        ->and($product->config_options['voyar_kind'])->toBe('ftp')
+        ->and($product->config_options['storage'])->toBe(100)
+        ->and($product->priceFor('monthly'))->toBe(79.2)
+        ->and(\App\Models\CustomField::productFields($product->id)->value('field_name'))->toStartWith('allowed_ips|');
 });
 
 test('the wizard page shows the catalogue and saves choices with Voyar\'s own labels', function () {

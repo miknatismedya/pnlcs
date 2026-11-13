@@ -308,3 +308,21 @@ test('reinstall only accepts a system Voyar offers', function () {
     $this->actingAs($owner)->post(route('voyar.client.reinstall', $service), ['osid' => '13', 'confirm' => '1'])->assertRedirect();
     expect($state['bodies']['POST /services/services/reinstall/VM-6'])->toBe(['osid' => '13']);
 });
+
+test('add-ons chosen on the order form are ordered with the server', function () {
+    $state = [];
+    fakeVoyar($state);
+    $service = voyarService(voyarServer());
+    $group = \App\Models\ConfigOptionGroup::create(['name' => 'Voyar Cloud']);
+    $cpu = \App\Models\ConfigOption::create(['group_id' => $group->id, 'option_name' => 'addon_6|Ek CPU', 'option_type' => 'quantity', 'qty_minimum' => 0, 'qty_maximum' => 16]);
+    $net = \App\Models\ConfigOption::create(['group_id' => $group->id, 'option_name' => 'addon_7|Yedekli Network', 'option_type' => 'checkbox']);
+    $cpuSub = \App\Models\ConfigOptionSub::create(['config_id' => $cpu->id, 'option_name' => '6|Ek CPU']);
+    $netSub = \App\Models\ConfigOptionSub::create(['config_id' => $net->id, 'option_name' => '7|Yedekli Network']);
+    \App\Models\ServiceConfigOption::create(['service_id' => $service->id, 'config_id' => $cpu->id, 'option_id' => $cpuSub->id, 'qty' => 2, 'unit_price' => 10]);
+    \App\Models\ServiceConfigOption::create(['service_id' => $service->id, 'config_id' => $net->id, 'option_id' => $netSub->id, 'qty' => 1, 'unit_price' => 10]);
+
+    expect((new VoyarModule)->create($service)['success'])->toBeTrue();
+
+    expect($state['bodies']['POST /services/services/create']['addons'])
+        ->toEqualCanonicalizing([['addonid' => 6, 'qty' => 2], ['addonid' => 7, 'qty' => 1]]);
+});
