@@ -1,0 +1,10 @@
+{
+    "name": "voyar",
+    "type": "server",
+    "class": "Modules\\Servers\\Voyar\\VoyarModule",
+    "provider": "Modules\\Servers\\Voyar\\VoyarServiceProvider",
+    "version": "0.1.0",
+    "display_name": "Voyar Cloud",
+    "description": "Voyar cloud servers (monthly and hourly), FTP storage and one-click apps",
+    "author": { "name": "Viyo Cloud" }
+}

@@ -1,0 +1,16 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use Modules\Servers\Voyar\Http\ClientController;
+
+// The customer's own server: same guards as the client area's service pages.
+Route::middleware(['web', 'banned.ip', 'client.permission', 'auth', '2fa'])
+    ->prefix('client/voyar/{service}')
+    ->name('voyar.client.')
+    ->group(function () {
+        Route::get('status', [ClientController::class, 'status'])->name('status');
+        Route::get('console', [ClientController::class, 'console'])->name('console');
+        Route::post('reinstall', [ClientController::class, 'reinstall'])->middleware('throttle:5,1')->name('reinstall');
+        Route::post('apps', [ClientController::class, 'installApp'])->middleware('throttle:10,1')->name('apps.install');
+        Route::post('password', [ClientController::class, 'password'])->middleware('throttle:5,1')->name('password');
+    });
