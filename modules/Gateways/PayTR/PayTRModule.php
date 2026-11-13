@@ -97,7 +97,8 @@ class PayTRModule implements GatewayModuleInterface, TokenizableGatewayInterface
                 'description' => 'Yenileme faturaları kayıtlı karttan otomatik çekilir (pnlcs otomatik kart tahsilatı açıkken). PayTR\'den Non3D ve tekrarlayan ödeme yetkisi gerekir.'],
             ['name' => 'timeout_limit', 'label' => 'Ödeme ekranı süresi (dakika)', 'type' => 'text', 'default' => '30'],
             ['name' => 'callback_hint', 'label' => 'Bildirim URL', 'type' => 'text', 'default' => '',
-                'description' => 'PayTR Mağaza Paneli → Destek & Kurulum → Ayarlar → Bildirim URL alanına şunu yazın: '.url('/gateway/paytr/callback')],
+                'description' => 'PayTR Mağaza Paneli → Destek & Kurulum → Ayarlar → Bildirim URL alanına şunu yazın: '.url('/gateway/paytr/callback')
+                    .' · İşlem sorgulama ve taksit oranları: '.url('/admin/paytr/status')],
         ];
     }
 
