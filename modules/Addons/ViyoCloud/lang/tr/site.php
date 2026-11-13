@@ -2,7 +2,7 @@
 
 return [
     'brand' => 'Viyo Cloud',
-    'meta_description' => 'İstanbul\'da NVMe cloud sunucu, saatlik bulut sunucu, FTP depolama ve tek tıkla uygulama kurulumu. Dakikalar içinde hazır, Türkçe destek.',
+    'meta_description' => 'Türkiye ve Avrupa\'da NVMe cloud sunucu, saatlik bulut sunucu, FTP depolama ve tek tıkla uygulama kurulumu. Dakikalar içinde hazır, Türkçe destek.',
 
     'nav' => [
         'products' => 'Ürünler',
@@ -84,7 +84,7 @@ return [
 
     'home' => [
         'title' => 'Cloud Sunucu, Saatlik Bulut ve FTP Depolama',
-        'badge' => 'İstanbul veri merkezi · NVMe',
+        'badge' => 'Türkiye ve Avrupa lokasyonları · NVMe',
         'headline' => 'Sunucun hazır, :em',
         'headline_em' => 'sen hazır mısın?',
         'lead' => 'Birkaç tıkla kendi cloud sunucunu oluştur. İstersen aylık sabit fiyatla, istersen sadece kullandığın saat kadar öde. Kurulum yok, sözleşme yok.',
@@ -206,7 +206,7 @@ return [
 
     'infra' => [
         'title' => 'Altyapı',
-        'lead' => 'Sunucuların İstanbul\'daki veri merkezinde, kurumsal donanım ve yedekli bağlantılar üzerinde çalışır.',
+        'lead' => 'Sunucuların Türkiye ve Avrupa\'daki veri merkezlerinde, kurumsal donanım ve yedekli bağlantılar üzerinde çalışır.',
         'location_title' => 'Lokasyon',
         'location' => 'İstanbul, Türkiye',
         'location_text' => 'Türkiye\'deki kullanıcılarına milisaniyeler içinde ulaş.',
@@ -326,5 +326,66 @@ return [
             'Tarayıcıdan konsol, tek tıkla yeniden kurulum',
         ],
         'help' => 'Yardım mı lazım?',
+    ],
+
+    'sec' => [
+        'home' => 'Ana sayfa',
+        'locations_title' => 'Lokasyonlar',
+        'locations_text' => 'Sunucunu siparişte seçtiğin lokasyonda açarız. Kullanıcılarına en yakın olanı seç.',
+        'systems_title' => 'İşletim sistemleri',
+        'systems_text' => 'Siparişte seç, istediğin zaman panelden başka bir sisteme yeniden kur.',
+        'ftp_features_title' => 'Depolamada neler var?',
+        'apps_catalog_title' => 'Kurulabilen uygulamalar',
+        'from' => 'başlayan fiyatlarla',
+        'hero_title' => 'Cloud sunucunu dakikalar içinde aç.',
+        'pricebox_title' => 'Başlangıç fiyatları',
+        'plans_title' => 'Cloud sunucu planları',
+        'plans_text' => 'Tüm planlarda ayrılmış kaynak, NVMe disk ve tam yönetici erişimi. Aylık öde ya da saatlik kullan.',
+        'plans_note' => 'Saatlik fiyat, sunucunun açık olduğu her saat için bakiyeden düşülür.',
+        'col' => [
+            'cpu' => 'vCPU',
+            'ram' => 'RAM',
+            'disk' => 'Disk',
+            'storage' => 'Alan',
+            'ipv4' => 'IPv4',
+            'monthly' => 'Aylık',
+            'hourly' => 'Saatlik',
+        ],
+        'unit' => [
+            'cpu' => ':n çekirdek',
+            'ram' => ':n GB',
+            'disk' => ':n GB NVMe',
+            'storage' => ':n GB',
+            'ipv4' => ':n adet',
+        ],
+        'features_text' => 'Hangi planı seçersen seç, aşağıdakiler fiyata dahil.',
+        'hourly_cta' => 'Saatlik fiyatları gör',
+        'faq_text' => 'Aradığını bulamazsan destek ekibine yaz.',
+        'faq' => [
+            [
+                'q' => 'Sunucum ne kadar sürede hazır olur?',
+                'a' => 'Ödeme onaylandıktan sonra kurulum otomatik başlar. Sunucu genellikle birkaç dakika içinde açılır; giriş bilgileri panelinde ve e-postanda olur.',
+            ],
+            [
+                'q' => 'Aylık ile saatlik arasındaki fark ne?',
+                'a' => 'Aylık planda dönem başında sabit bir ücret ödersin. Saatlikte fatura kesilmez; sunucu var olduğu sürece ücret her saat başı bakiyenden düşülür ve istediğin an silebilirsin.',
+            ],
+            [
+                'q' => 'Planımı sonradan büyütebilir miyim?',
+                'a' => 'Evet. Panelden daha büyük bir plana geçebilirsin; kalan sürenin farkı hesaplanır.',
+            ],
+            [
+                'q' => 'Hangi işletim sistemlerini kurabilirim?',
+                'a' => 'Ubuntu gibi Linux dağıtımları ve Windows Server. Güncel liste sipariş sayfasında, seçtiğin lokasyona göre görünür.',
+            ],
+            [
+                'q' => 'Ödemeyi nasıl yapabilirim?',
+                'a' => 'Kredi ya da banka kartıyla (3D Secure) veya bakiye ile ödeyebilirsin. Bakiye kartla yüklenebilir.',
+            ],
+            [
+                'q' => 'Sunucuma nasıl bağlanırım?',
+                'a' => 'Linux için SSH, Windows için Uzak Masaüstü ile. Ağ ayarı bozulursa panelden tarayıcı üzerinden konsola da bağlanabilirsin.',
+            ],
+        ],
     ],
 ];

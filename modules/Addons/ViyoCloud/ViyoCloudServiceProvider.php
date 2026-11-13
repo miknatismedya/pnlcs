@@ -15,6 +15,9 @@ class ViyoCloudServiceProvider extends ServiceProvider
     {
         $this->loadRoutesFrom(__DIR__.'/routes.php');
         $this->loadViewsFrom(__DIR__.'/views', 'viyocloud');
+        // The homepage sections this addon adds (sections.viyo-*), found the way
+        // the core's own sections are; the active theme's views still come first.
+        View::addLocation(__DIR__.'/views/site');
         $this->loadTranslationsFrom(__DIR__.'/lang', 'viyocloud');
         $this->loadMigrationsFrom(__DIR__.'/migrations');
 

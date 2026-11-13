@@ -37,7 +37,7 @@ test('the sign-in page keeps the core form and gains the brand panel', function 
 test('a guest gets the site header in place of the core menu bar', function () {
     $html = $this->get('/client/store')->assertOk()->getContent();
 
-    expect($html)->toContain('vx-head')
+    expect($html)->toContain('vs-header')
         ->not->toContain('class="pn-navbar"')
         ->not->toContain('class="pn-footer"')
         ->toContain('vx-foot');
@@ -69,4 +69,18 @@ test('every view the theme replaces has a core original, so Setup → Updates ca
         }
         expect(file_exists(resource_path('views/'.$relative)))->toBeTrue("no core view for {$relative}");
     }
+});
+
+test('the homepage is drawn from the homepage sections, and switching one off removes it', function () {
+    $html = $this->get('/')->assertOk()->getContent();
+    expect($html)->toContain('vs-hero')->toContain('id="plans"')->toContain('vs-footer');
+
+    \App\Models\HomepageSection::where('slug', 'viyo-plans')->update(['is_enabled' => false]);
+    expect($this->get('/')->assertOk()->getContent())->not->toContain('id="plans"');
+});
+
+test('an operator\'s wording in Setup → Appearance replaces the translated default', function () {
+    \App\Models\HomepageContent::where('section_slug', 'viyo-lines')->where('content_key', 'title')->update(['content_value' => 'Bizim başlığımız']);
+
+    expect($this->get('/')->assertOk()->getContent())->toContain('Bizim başlığımız');
 });

@@ -1,26 +1,17 @@
 @extends('viyocloud::layout')
-
 @section('title', __('viyocloud::site.ftp.title'))
 @section('meta_description', __('viyocloud::site.ftp.lead'))
-
 @section('content')
-@include('viyocloud::partials.page-hero', ['icon' => 'ri-folder-cloud-line', 'title' => __('viyocloud::site.ftp.title'), 'lead' => __('viyocloud::site.ftp.lead')])
+@include('viyocloud::partials.page-head', ['title' => __('viyocloud::site.ftp.title'), 'lead' => __('viyocloud::site.ftp.lead')])
 
-<section class="vc-section vc-section--flush">
-    <div class="vc-wrap">
-        @if($plans->isEmpty())
-            @include('viyocloud::partials.empty')
-        @else
-            @include('viyocloud::partials.plan-grid', ['plans' => $plans])
-        @endif
-    </div>
-</section>
+@include('sections.viyo-plans', ['content' => collect(), 'line' => 'ftp', 'bare' => true])
 
-<section class="vc-section vc-section--tint">
-    <div class="vc-wrap">
-        <div class="vc-features">
-            @foreach(__('viyocloud::site.ftp.features') as $f)
-            <div class="vc-feature"><i class="{{ $f['icon'] }}"></i><h3>{{ $f['title'] }}</h3><p>{{ $f['text'] }}</p></div>
+<section class="vs-section vs-section--tint">
+    <div class="vs-wrap">
+        <header class="vs-head"><h2>{{ __('viyocloud::site.sec.ftp_features_title') }}</h2></header>
+        <div class="vs-grid vs-grid--3">
+            @foreach((array) __('viyocloud::site.ftp.features') as $f)
+            <div class="vs-feature"><i class="{{ $f['icon'] }}"></i><h3>{{ $f['title'] }}</h3><p>{{ $f['text'] }}</p></div>
             @endforeach
         </div>
     </div>

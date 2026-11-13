@@ -1,10 +1,81 @@
-{{--
-    Viyo Cloud home page. The page itself lives in the Viyo Cloud addon
-    (modules/Addons/ViyoCloud) with the rest of the site; while that addon is
-    off, the core home page is shown so the site never breaks.
---}}
-@if(view()->exists('viyocloud::pages.home'))
-    @include('viyocloud::pages.home')
-@else
-    {!! view()->file(resource_path('views/welcome.blade.php'), \Illuminate\Support\Arr::except(get_defined_vars()['__data'], ['__env', 'app']))->render() !!}
-@endif
+{{-- Viyo Cloud: the core welcome.blade.php without the hero globe animation (the Viyo hero has none). The page is still built from the homepage sections of Setup -> Appearance. --}}
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ $textDirection ?? 'ltr' }}" data-theme="{{ request()->cookie('pnlcs_theme') === 'dark' ? 'dark' : 'light' }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ $brandName ?? 'PNLCS' }} — {{ __('client.welcome.meta_title_suffix') }}</title>
+    @include('partials.seo-meta', ['title' => ($brandName ?? 'PNLCS').' — '.__('client.welcome.meta_title_suffix'), 'description' => __('client.welcome.meta_description', ['brand' => $brandName ?? 'PNLCS'])])
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.1.0/fonts/remixicon.css" rel="stylesheet">
+    @if(!empty($customFavicon))
+    <link rel="icon" href="{{ $customFavicon }}" type="image/png">
+    @endif
+    @if(!empty($themeCssVars))
+    <style id="theme-vars">{!! $themeCssVars !!}</style>
+    @endif
+    @include('sections.styles')
+    @if(!empty($activeThemeAssets))
+    <link rel="stylesheet" href="{{ $activeThemeAssets }}/css/theme.css">
+    @endif
+    {!! hook_output('ClientAreaHeadOutput', ['user' => auth()->user()]) !!}
+    @include('partials.locale-alternates')
+</head>
+<body class="vs" x-data="{ mobileMenu: false }">
+
+    {{-- Fixed sections: topbar + navigation --}}
+    @include('sections.topbar')
+    @include('sections.navigation', ['apps' => $apps ?? []])
+
+    {{-- Dynamic sections from DB --}}
+    @foreach($sections as $section)
+        @if($section->is_enabled && $section->slug !== 'footer' && view()->exists("sections.{$section->slug}"))
+            @include("sections.{$section->slug}", [
+                'section' => $section,
+                'content' => $sectionContent[$section->slug] ?? collect(),
+                'products' => $products ?? collect(),
+                'domainPricing' => $domainPricing ?? collect(),
+                'apps' => $apps ?? [],
+            ])
+        @endif
+    @endforeach
+
+    {{-- Fixed section: footer --}}
+    @include('sections.footer', [
+        'content' => $sectionContent['footer'] ?? collect(),
+    ])
+
+    {{-- Alpine.js --}}
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    {{-- Dark mode toggle JS --}}
+    <script>
+    function toggleDarkMode() {
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        var newMode = isDark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newMode);
+        document.cookie = 'pnlcs_theme=' + newMode + ';path=/;max-age=31536000;SameSite=Lax';
+        var li = document.getElementById('lightIcon');
+        var di = document.getElementById('darkIcon');
+        if (li && di) {
+            li.style.display = isDark ? '' : 'none';
+            di.style.display = isDark ? 'none' : '';
+        }
+    }
+    (function() {
+        var m = document.cookie.match(/pnlcs_theme=(\w+)/);
+        if (m && m[1] === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            var li = document.getElementById('lightIcon');
+            var di = document.getElementById('darkIcon');
+            if (li) li.style.display = '';
+            if (di) di.style.display = 'none';
+        }
+    })();
+    </script>
+    {!! hook_output('ClientAreaFooterOutput', ['user' => auth()->user()]) !!}
+</body>
+</html>

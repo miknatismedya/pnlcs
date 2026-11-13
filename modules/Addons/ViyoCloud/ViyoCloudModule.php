@@ -32,7 +32,7 @@ class ViyoCloudModule implements AddonModuleInterface
 
     public function getVersion(): string
     {
-        return '0.2.0';
+        return '0.3.0';
     }
 
     public function getAuthor(): string

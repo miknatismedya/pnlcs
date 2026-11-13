@@ -111,6 +111,30 @@ class Catalog
         ];
     }
 
+    /**
+     * The choices customers get for one order option (location, os, cpu, app),
+     * as labels: read from the configurable options linked to the line's
+     * products, so the site lists exactly what the order form offers.
+     *
+     * @return list<string>
+     */
+    public static function choices(string $key, string $line = 'cloud'): array
+    {
+        $slug = self::GROUPS[$line] ?? null;
+        if ($slug === null) {
+            return [];
+        }
+
+        $groupIds = \App\Models\ConfigOptionLink::whereIn('product_id', Product::whereHas('group', fn ($q) => $q->where('slug', $slug))->pluck('id'))
+            ->pluck('group_id')->unique();
+
+        return \App\Models\ConfigOption::with('subs')->whereIn('group_id', $groupIds)
+            ->where('hidden', false)->get()
+            ->filter(fn ($o) => strtolower(explode('|', (string) $o->option_name, 2)[0]) === $key)
+            ->flatMap(fn ($o) => $o->subs->where('hidden', false)->map(fn ($s) => $s->displayName()))
+            ->unique()->values()->all();
+    }
+
     /** Hourly rates need four decimals: 0,2553₺ is not 0,26₺. */
     public static function hourlyFmt(float $amount): string
     {

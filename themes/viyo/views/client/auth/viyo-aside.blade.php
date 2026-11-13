@@ -6,7 +6,7 @@
 @endphp
 <aside class="vx-auth__aside">
     <a href="{{ url('/') }}" class="vx-auth__brand">
-        <span class="vx-logo vx-logo--light"><span class="vx-logo__mark"><i></i><i></i><i></i></span><span class="vx-logo__word">{{ company_name() }}</span></span>
+        <span class="vs-brand__mark"></span>{{ company_name() }}
     </a>
     <div class="vx-auth__pitch">
         @if($has('auth.title'))
@@ -18,10 +18,6 @@
             @foreach($points as $point)<li><i class="ri-check-line"></i> {{ $point }}</li>@endforeach
         </ul>
         @endif
-    </div>
-    <div class="vx-auth__term" aria-hidden="true">
-        <div><span>$</span> viyo server create --plan plus</div>
-        <div class="ok">✓ running · Ubuntu 24.04 · NVMe</div>
     </div>
     @if(!empty($contact['phone']) || !empty($contact['email']))
     <div class="vx-auth__help">

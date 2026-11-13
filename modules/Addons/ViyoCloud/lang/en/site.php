@@ -2,7 +2,7 @@
 
 return [
     'brand' => 'Viyo Cloud',
-    'meta_description' => 'NVMe cloud servers in Istanbul, hourly cloud, FTP storage and one-click apps. Ready in minutes, with local support.',
+    'meta_description' => 'NVMe cloud servers in Türkiye and Europe, hourly cloud, FTP storage and one-click apps. Ready in minutes, with local support.',
 
     'nav' => [
         'products' => 'Products',
@@ -84,7 +84,7 @@ return [
 
     'home' => [
         'title' => 'Cloud Servers, Hourly Cloud and FTP Storage',
-        'badge' => 'Istanbul data center · NVMe',
+        'badge' => 'Locations in Türkiye and Europe · NVMe',
         'headline' => 'Your server is ready, :em',
         'headline_em' => 'are you?',
         'lead' => 'Spin up your own cloud server in a few clicks. Pay a fixed monthly price, or only for the hours you use. No setup fees, no contracts.',
@@ -206,7 +206,7 @@ return [
 
     'infra' => [
         'title' => 'Infrastructure',
-        'lead' => 'Your servers run in an Istanbul data center on enterprise hardware with redundant uplinks.',
+        'lead' => 'Your servers run in data centers in Türkiye and Europe on enterprise hardware with redundant uplinks.',
         'location_title' => 'Location',
         'location' => 'Istanbul, Türkiye',
         'location_text' => 'Reach users across Türkiye within milliseconds.',
@@ -326,5 +326,66 @@ return [
             'Browser console, one-click reinstall',
         ],
         'help' => 'Need help?',
+    ],
+
+    'sec' => [
+        'home' => 'Home',
+        'locations_title' => 'Locations',
+        'locations_text' => 'Your server is created in the location you choose at order. Pick the one nearest your users.',
+        'systems_title' => 'Operating systems',
+        'systems_text' => 'Choose at order, and reinstall another system from the panel whenever you like.',
+        'ftp_features_title' => 'What storage includes',
+        'apps_catalog_title' => 'Apps you can install',
+        'from' => 'from',
+        'hero_title' => 'Launch a cloud server in minutes.',
+        'pricebox_title' => 'Starting prices',
+        'plans_title' => 'Cloud server plans',
+        'plans_text' => 'Every plan has dedicated resources, NVMe storage and full administrator access. Pay monthly or by the hour.',
+        'plans_note' => 'The hourly price comes out of your balance for every hour the server exists.',
+        'col' => [
+            'cpu' => 'vCPU',
+            'ram' => 'RAM',
+            'disk' => 'Disk',
+            'storage' => 'Storage',
+            'ipv4' => 'IPv4',
+            'monthly' => 'Monthly',
+            'hourly' => 'Hourly',
+        ],
+        'unit' => [
+            'cpu' => ':n cores',
+            'ram' => ':n GB',
+            'disk' => ':n GB NVMe',
+            'storage' => ':n GB',
+            'ipv4' => ':n',
+        ],
+        'features_text' => 'Whichever plan you choose, all of this is included.',
+        'hourly_cta' => 'See hourly prices',
+        'faq_text' => 'Can\'t find your answer? Write to support.',
+        'faq' => [
+            [
+                'q' => 'How soon is my server ready?',
+                'a' => 'Setup starts automatically once the payment is confirmed. The server is usually up within a few minutes; the login details are in your panel and your email.',
+            ],
+            [
+                'q' => 'What is the difference between monthly and hourly?',
+                'a' => 'A monthly plan is a fixed price paid at the start of each period. Hourly has no invoice: while the server exists, each hour is taken from your balance, and you can delete it at any time.',
+            ],
+            [
+                'q' => 'Can I upgrade my plan later?',
+                'a' => 'Yes. Move to a larger plan from the panel; the difference for the remaining time is worked out for you.',
+            ],
+            [
+                'q' => 'Which operating systems can I install?',
+                'a' => 'Linux distributions such as Ubuntu, and Windows Server. The current list is on the order page, for the location you choose.',
+            ],
+            [
+                'q' => 'How can I pay?',
+                'a' => 'By credit or debit card (3D Secure) or from your balance. You can top up your balance by card.',
+            ],
+            [
+                'q' => 'How do I connect to my server?',
+                'a' => 'SSH for Linux, Remote Desktop for Windows. If the network settings break, you can also open the console in your browser from the panel.',
+            ],
+        ],
     ],
 ];

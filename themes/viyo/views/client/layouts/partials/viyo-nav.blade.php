@@ -23,15 +23,13 @@
     }
     $showBalance = $client && \App\Support\ClientPermissions::ownsActiveAccount($user);
 
-    $logo = function (bool $light = false) use ($brand) {
-        return '<span class="vx-logo'.($light ? ' vx-logo--light' : '').'"><span class="vx-logo__mark"><i></i><i></i><i></i></span><span class="vx-logo__word">'.e($brand).'</span></span>';
-    };
+    $logo = fn () => '<span class="vs-brand__mark"></span>'.e($brand);
 @endphp
 
 @if($user)
 <aside class="vx-side" id="vxSide">
     <a href="{{ route('client.home') }}" class="vx-side__brand">
-        @if(!empty($customLogo))<img src="{{ $customLogo }}" alt="{{ $brand }}">@else{!! $logo(true) !!}@endif
+        @if(!empty($customLogo))<img src="{{ $customLogo }}" alt="{{ $brand }}">@else{!! $logo() !!}@endif
     </a>
 
     <a href="{{ route('client.store') }}" class="vx-side__cta {{ request()->routeIs('client.store*', 'client.cart.*') ? 'is-active' : '' }}"><i class="ri-add-line"></i> {{ $t('client.new_server', 'client.nav.order_new_service') }}</a>
@@ -129,38 +127,6 @@
     </div>
 </header>
 @else
-@php
-    $siteLinks = array_values(array_filter([
-        $has('viyocloud.cloud') ? ['viyocloud.cloud', $t('nav.cloud', 'client.nav.services')] : null,
-        $has('viyocloud.hourly') ? ['viyocloud.hourly', $t('nav.hourly', 'client.nav.services')] : null,
-        $has('viyocloud.ftp') ? ['viyocloud.ftp', $t('nav.ftp', 'client.nav.services')] : null,
-        $has('viyocloud.apps') ? ['viyocloud.apps', $t('nav.apps', 'client.nav.services')] : null,
-    ]));
-@endphp
-<header class="vx-head">
-    <div class="vx-head__row">
-        <a href="{{ url('/') }}" class="vx-head__brand">@if(!empty($customLogo))<img src="{{ $customLogo }}" alt="{{ $brand }}">@else{!! $logo() !!}@endif</a>
-        <nav class="vx-head__nav">
-            @foreach($siteLinks as [$route, $label])
-            <a href="{{ route($route) }}">{{ $label }}</a>
-            @endforeach
-            <a href="{{ route('client.store') }}" class="{{ request()->routeIs('client.store*') ? 'is-active' : '' }}">{{ $t('client.new_server', 'client.nav.order_new_service') }}</a>
-        </nav>
-        <div class="vx-head__actions">
-            @if($languages->count() > 1)
-            <details class="vx-menu">
-                <summary class="vx-chip"><i class="ri-translate-2"></i> {{ strtoupper(app()->getLocale()) }}</summary>
-                <div class="vx-menu__list">
-                    @foreach($languages as $language)
-                    <a href="{{ \App\Support\LocaleUrl::switchTo($language->code) }}" class="{{ $language->code === app()->getLocale() ? 'is-active' : '' }}">{{ $language->native_name }}</a>
-                    @endforeach
-                </div>
-            </details>
-            @endif
-            <a href="{{ route('client.cart.index') }}" class="vx-chip" aria-label="{{ $t('nav.cart', 'client.cart.view_cart') }}"><i class="ri-shopping-bag-3-line"></i></a>
-            <a href="{{ route('client.login') }}" class="vx-head__login">{{ __('common.actions.login') }}</a>
-            <a href="{{ route('client.register') }}" class="vx-btn">{{ $t('nav.signup', 'client.nav.get_started') }}</a>
-        </div>
-    </div>
-</header>
+{{-- A guest sees the site's own menu (sections/navigation in this theme). --}}
+@include('sections.navigation')
 @endif
