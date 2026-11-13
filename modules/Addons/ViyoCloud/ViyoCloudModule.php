@@ -75,7 +75,11 @@ class ViyoCloudModule implements AddonModuleInterface
     public function sidebar(): array
     {
         return [
-            ['label' => 'Viyo Cloud', 'url' => '/admin/config/addons/modules/'.self::NAME],
+            ['label' => 'Viyo Cloud', 'url' => '/admin/config/addons/modules/'.self::NAME, 'children' => [
+                ['label' => 'Viyo Cloud', 'url' => '/admin/config/addons/modules/'.self::NAME],
+                ['label' => 'Voyar', 'url' => '/admin/voyar/setup'],
+                ['label' => 'PayTR', 'url' => '/admin/config/gateways'],
+            ]],
         ];
     }
 

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Servers\Voyar\Http\Admin\SetupController;
 use Modules\Servers\Voyar\Http\ClientController;
 
 // The customer's own server: same guards as the client area's service pages.
@@ -13,4 +14,15 @@ Route::middleware(['web', 'banned.ip', 'client.permission', 'auth', '2fa'])
         Route::post('reinstall', [ClientController::class, 'reinstall'])->middleware('throttle:5,1')->name('reinstall');
         Route::post('apps', [ClientController::class, 'installApp'])->middleware('throttle:10,1')->name('apps.install');
         Route::post('password', [ClientController::class, 'password'])->middleware('throttle:5,1')->name('password');
+    });
+
+// Staff: Setup → Voyar, the wizard tying products to Voyar plans.
+Route::middleware(['web', 'admin.auth', 'admin.2fa', 'admin.permission:manage_products'])
+    ->prefix('admin/voyar')
+    ->name('admin.voyar.')
+    ->group(function () {
+        Route::get('setup', [SetupController::class, 'index'])->name('setup');
+        Route::post('setup/refresh', [SetupController::class, 'refresh'])->name('setup.refresh');
+        Route::post('setup/mapping', [SetupController::class, 'mapping'])->name('setup.mapping');
+        Route::post('setup/options', [SetupController::class, 'options'])->name('setup.options');
     });
