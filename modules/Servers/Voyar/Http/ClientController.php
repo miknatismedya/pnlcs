@@ -123,6 +123,36 @@ class ClientController extends Controller
     }
 
     /** @return array{0: VoyarClient, 1: string} */
+    /** One tab of the server page, as JSON (backups, firewall, iso, rdns, waf, graphs, access, tasks). */
+    public function section(Request $request, Service $service, string $section): JsonResponse
+    {
+        abort_unless(in_array($section, \Modules\Servers\Voyar\VoyarManage::SECTIONS, true), 404);
+        [$api, $id] = $this->resolve($service);
+
+        try {
+            return response()->json(['ok' => true] + (new \Modules\Servers\Voyar\VoyarManage($api, $id))->section($section, $request->query()));
+        } catch (VoyarException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 502);
+        }
+    }
+
+    /** One action from a tab; the answer is a sentence for the customer. */
+    public function act(Request $request, Service $service, string $action): JsonResponse
+    {
+        [$api, $id] = $this->resolve($service);
+
+        try {
+            $result = (new \Modules\Servers\Voyar\VoyarManage($api, $id))->act($action, $request->except('_token'));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['ok' => false, 'message' => collect($e->errors())->flatten()->first()], 422);
+        } catch (VoyarException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 502);
+        }
+        \Illuminate\Support\Facades\Log::info('Voyar: customer action', ['service' => $service->id, 'action' => $action]);
+
+        return response()->json(['ok' => true, 'message' => (string) ($result['message'] ?? __('voyar::voyar.manage.done'))]);
+    }
+
     private function resolve(Service $service): array
     {
         abort_if($service->client_id !== $this->getClientId(), 403);

@@ -326,3 +326,102 @@ test('add-ons chosen on the order form are ordered with the server', function ()
     expect($state['bodies']['POST /services/services/create']['addons'])
         ->toEqualCanonicalizing([['addonid' => 6, 'qty' => 2], ['addonid' => 7, 'qty' => 1]]);
 });
+
+// ── Server management tabs (VoyarManage) ──────────────────────────────
+
+function voyarManaged(array &$state): array
+{
+    $state['answers'] = ($state['answers'] ?? []) + [
+        'GET /services/backups/VM-5' => [['status' => 'success', 'data' => [['volid' => 'backup:vzdump-1.vma.zst', 'storage' => 'backup', 'ctime' => 1790823600, 'size' => 2147483648]]]],
+        'GET /services/firewall/rules/VM-5' => [['status' => 'success', 'data' => [
+            ['pos' => 0, 'type' => 'in', 'action' => 'ACCEPT', 'enable' => 1, 'proto' => 'tcp', 'dport' => '443', 'mutable' => true],
+            ['pos' => 1, 'type' => 'in', 'action' => 'ACCEPT', 'enable' => 1, 'comment' => 'default', 'mutable' => false],
+        ]]],
+        'GET /services/rdns/list/VM-5' => [['status' => 'success', 'ipaddresses' => [['ipaddress' => '203.0.113.10', 'rdns_hostname' => '']]]],
+        'GET /services/waf/list/VM-5' => [['status' => 'success', 'bindings' => [['bindingid' => 3, 'name' => 'OWASP', 'ipaddresses' => ['203.0.113.10' => ['enabled' => false]]]]]],
+    ];
+    fakeVoyar($state);
+    $service = voyarService(voyarServer(), [], ['voyar_id' => 'VM-5']);
+    $service->forceFill(['status' => 'active'])->save();
+    $owner = User::factory()->create();
+    $owner->clients()->attach($service->client_id);
+
+    return [$service, $owner];
+}
+
+test('a tab lists the server\'s own records, and only for its owner', function () {
+    $state = [];
+    [$service, $owner] = voyarManaged($state);
+    $stranger = User::factory()->create();
+    $stranger->clients()->attach(Client::factory()->create()->id);
+
+    $this->actingAs($owner)->getJson(route('voyar.client.section', [$service, 'backups']))
+        ->assertOk()->assertJsonPath('items.0.volid', 'backup:vzdump-1.vma.zst');
+    $this->actingAs($stranger)->getJson(route('voyar.client.section', [$service, 'backups']))->assertForbidden();
+    $this->actingAs($owner)->getJson(route('voyar.client.section', [$service, 'nonsense']))->assertNotFound();
+});
+
+test('a backup can only be restored or deleted if it is this server\'s', function () {
+    $state = [];
+    [$service, $owner] = voyarManaged($state);
+
+    $this->actingAs($owner)->postJson(route('voyar.client.act', [$service, 'backup.restore']), ['volid' => 'backup:someone-else.vma.zst'])->assertStatus(422);
+    expect($state['calls'])->not->toContain('POST /services/backups/restore/VM-5');
+
+    $this->actingAs($owner)->postJson(route('voyar.client.act', [$service, 'backup.restore']), ['volid' => 'backup:vzdump-1.vma.zst'])->assertOk();
+    expect($state['bodies']['POST /services/backups/restore/VM-5'])->toBe(['volid' => 'backup:vzdump-1.vma.zst', 'storage' => 'backup']);
+});
+
+test('firewall rules are validated, and a locked rule stays', function () {
+    $state = [];
+    [$service, $owner] = voyarManaged($state);
+    $act = fn (string $a, array $body) => $this->actingAs($owner)->postJson(route('voyar.client.act', [$service, $a]), $body);
+
+    $act('firewall.create', ['type' => 'in', 'action' => 'ACCEPT', 'proto' => 'icmp', 'dport' => '22'])->assertStatus(422);   // a port on ICMP
+    $act('firewall.create', ['type' => 'in', 'action' => 'ACCEPT', 'proto' => 'tcp', 'dport' => '22', 'source' => 'not-an-ip'])->assertStatus(422);
+    $act('firewall.delete', ['pos' => 1])->assertStatus(422);   // the default rule
+    expect(collect($state['calls'])->filter(fn ($c) => str_starts_with($c, 'POST /services/firewall'))->all())->toBe([]);
+
+    $act('firewall.create', ['type' => 'in', 'action' => 'ACCEPT', 'proto' => 'tcp', 'dport' => '8000:8100', 'source' => '198.51.100.0/24', 'comment' => 'app'])->assertOk();
+    expect($state['bodies']['POST /services/firewall/rules/create/VM-5'])
+        ->toMatchArray(['type' => 'in', 'action' => 'ACCEPT', 'proto' => 'tcp', 'dport' => '8000:8100', 'source' => '198.51.100.0/24']);
+
+    $act('firewall.toggle', ['pos' => 0])->assertOk();
+    expect($state['bodies']['POST /services/firewall/rules/update/VM-5/0'])->toBe(['enable' => 0]);
+});
+
+test('reverse DNS and WAF only touch this server\'s IP addresses', function () {
+    $state = [];
+    [$service, $owner] = voyarManaged($state);
+    $act = fn (string $a, array $body) => $this->actingAs($owner)->postJson(route('voyar.client.act', [$service, $a]), $body);
+
+    $act('rdns.update', ['ipaddress' => '198.51.100.1', 'hostname' => 'mail.example.com'])->assertStatus(422);
+    $act('rdns.update', ['ipaddress' => '203.0.113.10', 'hostname' => 'not a host'])->assertStatus(422);
+    $act('waf.toggle', ['bindingid' => 3, 'ipaddress' => '198.51.100.1'])->assertStatus(422);
+
+    $act('rdns.update', ['ipaddress' => '203.0.113.10', 'hostname' => 'Mail.Example.com'])->assertOk();
+    $act('waf.toggle', ['bindingid' => 3, 'ipaddress' => '203.0.113.10'])->assertOk();
+    expect($state['bodies']['POST /services/rdns/update/VM-5'])->toBe(['ipaddress' => '203.0.113.10', 'hostname' => 'mail.example.com'])
+        ->and($state['bodies']['POST /services/waf/toggle/VM-5'])->toBe(['bindingid' => 3, 'ipaddress' => '203.0.113.10']);
+});
+
+test('ports must be real ports', function () {
+    $state = [];
+    [$service, $owner] = voyarManaged($state);
+
+    $this->actingAs($owner)->postJson(route('voyar.client.act', [$service, 'ssh.port']), ['port' => 70000])->assertStatus(422);
+    $this->actingAs($owner)->postJson(route('voyar.client.act', [$service, 'ssh.port']), ['port' => 2222])->assertOk();
+    expect($state['bodies']['POST /services/vm/change-ssh-port/VM-5'])->toBe(['port' => 2222]);
+});
+
+test('graphs read both the documented and the current answer shape', function () {
+    $state = ['answers' => ['GET /services/vm/graphs/VM-5' => [['status' => 'success', 'data' => ['hour' => ['raw' => [
+        ['time' => 1, 'cpu' => ['usage_percent' => 8.07], 'memory' => ['usage_percent' => 90.48], 'network' => ['in' => 3.5, 'out' => 1]],
+        ['time' => 2, 'cpu' => 0.12, 'mem' => 1073741824, 'maxmem' => 4294967296],
+    ]]]]]]];
+    [$service, $owner] = voyarManaged($state);
+
+    $points = $this->actingAs($owner)->getJson(route('voyar.client.section', [$service, 'graphs']))->assertOk()->json('points');
+    expect($points[0])->toMatchArray(['cpu' => 8.1, 'mem' => 90.5, 'netin' => 3.5])
+        ->and($points[1])->toMatchArray(['cpu' => 12.0, 'mem' => 25.0]);
+});

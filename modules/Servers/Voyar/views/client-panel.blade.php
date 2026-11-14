@@ -44,6 +44,7 @@
             <li><span class="k">{{ __('voyar::voyar.panel.state') }}</span><span class="v vy-state"><span class="vy-dot" :class="s.state"></span>
                 <span x-text="{{ \Illuminate\Support\Js::from(__('voyar::voyar.panel.states')) }}[s.state] ?? s.state"></span></span></li>
             <li><span class="k">{{ __('voyar::voyar.panel.ip') }}</span><span class="v"><span class="sv-code">{{ $data['voyar_ip'] ?? '—' }}</span></span></li>
+            <li><span class="k">{{ __('voyar::voyar.panel.user') }}</span><span class="v"><span class="sv-code">{{ $service->username ?: 'root' }}</span></span></li>
             <li><span class="k">{{ __('voyar::voyar.panel.os') }}</span><span class="v">{{ $data['voyar_os'] ?? '—' }}</span></li>
             <li><span class="k">{{ __('voyar::voyar.panel.location') }}</span><span class="v">{{ $data['voyar_location'] ?? '—' }}</span></li>
             @if($billing)
@@ -74,6 +75,7 @@
 </div>
 
 @if($active)
+@include('voyar::client-manage')
 <div class="vy-grid">
     @if($families !== [])
     <div class="sv-panel">
@@ -110,7 +112,14 @@
                     @if(!empty($app['logo']))<img src="{{ $app['logo'] }}" alt="" loading="lazy">@endif
                     <span>{{ $app['name'] }}</span>
                     @foreach($app['fields'] ?? [] as $field)
-                        <input type="text" name="fields[{{ $field['field_id'] }}]" placeholder="{{ $field['field_label'] }}" @if(!empty($field['field_required'])) required @endif style="width:100%;padding:6px;border:1px solid var(--border);border-radius:8px;font-size:12px">
+                        @php
+                            $label = $field['field_name'] ?? $field['field_label'] ?? ($field['variable_name'] ?? '');
+                            $pattern = $field['field_validation']['pattern'] ?? null;
+                            $secret = ($field['validation'] ?? $field['field_validation']['rule'] ?? '') === 'password';
+                        @endphp
+                        <input type="{{ $secret ? 'password' : 'text' }}" name="fields[{{ $field['field_id'] }}]" placeholder="{{ $label }}" title="{{ $field['field_placeholder'] ?? $label }}" aria-label="{{ $label }}"
+                            @if($pattern) pattern="{{ $pattern }}" @endif @if(!empty($field['field_required'])) required @endif autocomplete="off"
+                            style="width:100%;padding:6px;border:1px solid var(--border);border-radius:8px;font-size:12px">
                     @endforeach
                     @if(!empty($app['installed']))
                         <span class="text-muted text-sm">{{ __('voyar::voyar.apps.installed') }}</span>

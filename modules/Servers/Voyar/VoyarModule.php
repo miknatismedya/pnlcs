@@ -346,6 +346,16 @@ class VoyarModule extends AbstractServerModule
         ]);
     }
 
+    /**
+     * The core's "server details" box shows the server record's address,
+     * which for Voyar is the API, not the customer's server; the panel shows
+     * the server's own IP and user instead.
+     */
+    public function servicePageHides(): array
+    {
+        return ['server_details'];
+    }
+
     public function adminAreaPanel(Service $service)
     {
         return view('voyar::admin-panel', ['service' => $service, 'data' => $this->getModuleData($service)]);
@@ -424,6 +434,16 @@ class VoyarModule extends AbstractServerModule
     }
 
     /** @param array<string, mixed> $remote */
+    /**
+     * Ties an existing Voyar server to a service (Voyar servers → import):
+     * the same record an order leaves behind.
+     */
+    public function adopt(Service $service, array $remote): void
+    {
+        $this->remember($service, $remote, VoyarOptions::forService($service));
+        $this->setModuleData($service, ['voyar_hostname' => $remote['hostname'] ?? null, 'voyar_imported_at' => now()->toIso8601String()]);
+    }
+
     private function remember(Service $service, array $remote, VoyarOptions $opt): void
     {
         $this->setModuleData($service, [

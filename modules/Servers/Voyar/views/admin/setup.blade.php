@@ -22,7 +22,7 @@
     .vy-ok{color:#16a34a;font-weight:700}.vy-bad{color:#e5484d;font-weight:700}
 </style>
 
-<div class="page-header"><h1>{{ __('voyar::voyar.setup.title') }}</h1></div>
+<div class="page-header"><h1>{{ __('voyar::voyar.setup.title') }}</h1><a href="{{ route('admin.voyar.servers') }}" class="btn btn-default btn-sm">{{ __('voyar::voyar.servers.title') }}</a></div>
 @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
 @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
 

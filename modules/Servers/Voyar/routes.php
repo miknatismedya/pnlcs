@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\Servers\Voyar\Http\Admin\ServersController;
 use Modules\Servers\Voyar\Http\Admin\SetupController;
 use Modules\Servers\Voyar\Http\ClientController;
 
@@ -14,6 +15,8 @@ Route::middleware(['web', 'banned.ip', 'client.permission', 'auth', '2fa'])
         Route::post('reinstall', [ClientController::class, 'reinstall'])->middleware('throttle:5,1')->name('reinstall');
         Route::post('apps', [ClientController::class, 'installApp'])->middleware('throttle:10,1')->name('apps.install');
         Route::post('password', [ClientController::class, 'password'])->middleware('throttle:5,1')->name('password');
+        Route::get('section/{section}', [ClientController::class, 'section'])->middleware('throttle:60,1')->name('section');
+        Route::post('act/{action}', [ClientController::class, 'act'])->middleware('throttle:20,1')->where('action', '[a-z]+\\.[a-z]+')->name('act');
     });
 
 // Staff: Setup → Voyar, the wizard tying products to Voyar plans.
@@ -27,4 +30,6 @@ Route::middleware(['web', 'admin.auth', 'admin.2fa', 'admin.permission:manage_pr
         Route::post('setup/options', [SetupController::class, 'options'])->name('setup.options');
         Route::post('setup/addons', [SetupController::class, 'addons'])->name('setup.addons');
         Route::post('setup/ftp', [SetupController::class, 'ftp'])->name('setup.ftp');
+        Route::get('servers', [ServersController::class, 'index'])->name('servers');
+        Route::post('servers/import', [ServersController::class, 'import'])->name('servers.import');
     });
