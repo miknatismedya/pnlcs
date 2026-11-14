@@ -475,3 +475,17 @@ body.vx--auth .register-link, body.vx--auth .login-link { text-align: left; marg
     .vx-auth__pitch, .vx-auth__help { display: none; }
     .vx-foot { padding: 16px; }
 }
+
+/* Service page header (core client/services/show): a plain card, not a gradient banner. */
+body.vx .sv-hero { background: var(--v-bg) !important; color: var(--v-ink) !important; border: 1px solid var(--v-line); box-shadow: none !important; padding: 22px 24px; }
+body.vx .sv-hero::before, body.vx .sv-hero::after { display: none !important; }
+body.vx .sv-hicon { background: var(--v-primary-soft) !important; color: var(--v-primary); backdrop-filter: none; border-radius: 8px; width: 48px; height: 48px; font-size: 24px; }
+body.vx .sv-htitle h1 { color: var(--v-ink); font-weight: 700; font-size: 22px; letter-spacing: -0.015em; }
+body.vx .sv-htitle .s { color: var(--v-muted); opacity: 1; }
+body.vx .sv-status { background: var(--v-ok-soft) !important; color: var(--v-ok); }
+body.vx .sv-status .d { background: var(--v-ok); box-shadow: none; }
+body.vx .sv-b { border-radius: 6px; padding: 8px 14px; box-shadow: none !important; transform: none !important; }
+body.vx .sv-b-solid { background: var(--v-primary); color: #fff; }
+body.vx .sv-b-glass { background: var(--v-bg); color: var(--v-ink); border-color: var(--v-line-2); }
+body.vx .sv-b-glass:hover { background: var(--v-tint); }
+body.vx .sv-panel { border-radius: var(--v-r); box-shadow: none; }
